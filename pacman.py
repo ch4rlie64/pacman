@@ -137,12 +137,24 @@ def move():
         if valid(point + course):
             point.move(course)
         else:
-            options = [
-                vector(5, 0),
-                vector(-5, 0),
-                vector(0, 5),
-                vector(0, -5),
-            ]
+            #Cambia la velocidad a la que se mueven los fantasmas dependiendo de
+            #si el score del jugador está debajo o por encima de cien, la velocidad
+            #aumenta en este último caso.
+            if state['score'] < 100:
+                options = [
+                    vector(5, 0),
+                    vector(-5, 0),
+                    vector(0, 5),
+                    vector(0, -5),
+                ]
+                
+            else:
+                options = [
+                    vector(10, 0),
+                    vector(-10, 0),
+                    vector(0, 10),
+                    vector(0, -10),
+                ]
             plan = choice(options)
             course.x = plan.x
             course.y = plan.y
