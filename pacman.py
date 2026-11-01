@@ -1,18 +1,5 @@
-"""Pacman, classic arcade game.
-
-Exercises
-
-1. Change the board.
-2. Change the number of ghosts.
-3. Change where pacman starts.
-4. Make the ghosts faster/slower.
-5. Make the ghosts smarter.
-"""
-
-from random import choice
 from turtle import *
-
-from freegames import floor, vector
+from freegames import floor, square, vector
 
 state = {'score': 0}
 path = Turtle(visible=False)
@@ -51,11 +38,15 @@ tiles = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ]
-# fmt: on
+options = [
+    vector(5, 0),
+    vector(-5, 0),
+    vector(0, 5),
+    vector(0, -5),
+]
 
 
 def square(x, y):
-    """Draw square using path at (x, y)."""
     path.up()
     path.goto(x, y)
     path.down()
@@ -69,15 +60,12 @@ def square(x, y):
 
 
 def offset(point):
-    """Return offset of point in tiles."""
     x = (floor(point.x, 20) + 200) / 20
     y = (180 - floor(point.y, 20)) / 20
-    index = int(x + y * 20)
-    return index
+    return int(x + y * 20)
 
 
 def valid(point):
-    """Return True if point is valid in tiles."""
     index = offset(point)
 
     if tiles[index] == 0:
@@ -92,7 +80,6 @@ def valid(point):
 
 
 def world():
-    """Draw world using path."""
     bgcolor('black')
     path.color('blue')
 
@@ -105,13 +92,12 @@ def world():
             square(x, y)
 
             if tile == 1:
-                path.up()
-                path.goto(x + 10, y + 10)
-                path.dot(2, 'white')
+                up()
+                goto(x + 10, y + 10)
+                dot(2, 'white')
 
 
 def move():
-    """Move pacman and all ghosts."""
     writer.undo()
     writer.write(state['score'])
 
@@ -135,29 +121,28 @@ def move():
 
     for point, course in ghosts:
         if valid(point + course):
+            if point.x % 20 == 0 and point.y % 20 == 0:
+                valid_options = [opt for opt in options if valid(point + opt)]
+                if valid_options:
+                    plan = min(
+                        valid_options,
+                        key=lambda opt: abs((point.x + opt.x) - pacman.x)
+                        + abs((point.y + opt.y) - pacman.y),
+                    )
+                    course.x = plan.x
+                    course.y = plan.y
             point.move(course)
         else:
-            #Cambia la velocidad a la que se mueven los fantasmas dependiendo de
-            #si el score del jugador está debajo o por encima de cien, la velocidad
-            #aumenta en este último caso.
-            if state['score'] < 100:
-                options = [
-                    vector(5, 0),
-                    vector(-5, 0),
-                    vector(0, 5),
-                    vector(0, -5),
-                ]
-                
-            else:
-                options = [
-                    vector(10, 0),
-                    vector(-10, 0),
-                    vector(0, 10),
-                    vector(0, -10),
-                ]
-            plan = choice(options)
-            course.x = plan.x
-            course.y = plan.y
+            valid_options = [opt for opt in options if valid(point + opt)]
+            if valid_options:
+                plan = min(
+                    valid_options,
+                    key=lambda opt: abs((point.x + opt.x) - pacman.x)
+                    + abs((point.y + opt.y) - pacman.y),
+                )
+                course.x = plan.x
+                course.y = plan.y
+                point.move(course)
 
         up()
         goto(point.x + 10, point.y + 10)
@@ -173,7 +158,6 @@ def move():
 
 
 def change(x, y):
-    """Change pacman aim if valid."""
     if valid(pacman + vector(x, y)):
         aim.x = x
         aim.y = y
